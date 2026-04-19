@@ -24,12 +24,6 @@
     </nav>
 </header>
 
-<div class="role-bar">
-    <span id="adminStatus">Mode: Member (View Only)</span>
-    <button id="loginBtn" class="login-btn" onclick="openLogin()">Admin Login</button>
-    <button id="logoutBtn" class="login-btn hidden" onclick="logout()">Logout</button>
-</div>
-
 <div id="home" class="section">
     <section class="hero">
         <div class="left-content">
@@ -37,25 +31,41 @@
             <p>Kristian Ṭhalai Pawl,<br>Chhingchhip Mualpui Branch </p>
             <button class="btn" onclick="showSection('member-page')">Member List 2026 →</button>
             <button class="btn" style="background: #6f42c1;" onclick="showHruaitute()">2026 Hruaitute →</button>
+            <div class="scroll-down"><i class="fas fa-chevron-down"></i> Scroll Down</div>
         </div>
         <div class="right-content">
-            <img src="https://i.pinimg.com/736x/c4/63/80/c46380515200eca4015ba39e78eebfa6.jpg" alt="Main Logo" style="width: 300px;">
+            <img src="https://i.pinimg.com/736x/c4/63/80/c46380515200eca4015ba39e78eebfa6.jpg" alt="Main Logo" style="width: 350px;">
+        </div>
+    </section>
+
+    <section class="extra-content">
+        <div class="kumpuan-box">
+            <h2 style="font-size: 28px; margin-bottom: 10px;">KUMPUAN 2026</h2>
+            <h1 style="font-size: 40px; letter-spacing: 2px;">"Music Zir Uar"</h1>
+        </div>
+        <div class="project-grid">
+            <div class="project-card"><h3><i class="fas fa-church"></i> KTP Room sak</h3><p>Kumin chhunga kan Branch project lian ber tur a ni.</p></div>
+            <div class="project-card"><h3><i class="fas fa-hand-holding-heart"></i> Music Instrument lei</h3><p>Music zir uar kum anih avangin lei belh tum a ni.</p></div>
+            <div class="project-card"><h3><i class="fas fa-music"></i> Zaipawl MV siam</h3><p>Kohhran zaipawl te'n MV kan neih theih nan hmalak mek a ni.</p></div>
         </div>
     </section>
 </div>
 
 <section id="member-page" class="container section hidden">
     <h2>Member List 2026</h2>
-    <div class="input-group admin-only hidden">
-        <input type="text" id="nameInput" placeholder="Member hming...">
+    <div class="progress-box">
+        <div id="progressBar" class="progress-bar"></div>
+        <div class="progress-text">Progression: <span id="memberCount">0</span> / 100 Members</div>
+    </div>
+    <div class="input-group">
+        <input type="text" id="nameInput" placeholder="Member hming ziak rawh...">
         <select id="sectionInput">
             <option value="Mualpui Kawn">Mualpui kawn</option>
             <option value="Hmarveng">Hmarveng</option>
             <option value="Biak in Veng">Biak In Veng</option>
             <option value="Bangla">Bangla</option> 
         </select>
-        <button id="addBtn" class="add-btn" onclick="addMember()">Add</button>
-        <button id="updateBtn" class="add-btn hidden" style="background:#ffc107; color:#000;" onclick="saveEdit()">Update</button>
+        <button class="add-btn" onclick="addMember()">Add Member</button>
     </div>
     <table>
         <thead>
@@ -67,32 +77,24 @@
 
 <section id="gallery-page" class="container section hidden">
     <h2>Picture Gallery</h2>
-    <div class="admin-only hidden" style="background: var(--bg-color); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-        <p><b>Admin Controls:</b></p>
+    <br>
+    <div style="background: var(--bg-color); padding: 20px; border-radius: 10px; border: 1px solid var(--border-color);">
+        <p><b>Administrator Controls:</b></p><br>
         <div class="input-group">
-            <input type="text" id="folderNameInput" placeholder="Folder hming...">
-            <button onclick="createFolder()" class="add-btn" style="background: #1e73be;">Create Folder</button>
+            <input type="text" id="folderNameInput" placeholder="Folder hming thar siamna...">
+            <button class="add-btn" onclick="createFolder()" style="background: #1e73be;">Create Folder</button>
         </div>
         <div class="input-group">
+            <select id="uploadFolderSelect"></select>
             <input type="file" id="imageInput" accept="image/*">
-            <button onclick="uploadImage()" class="add-btn">Upload Image</button>
+            <button class="add-btn" onclick="uploadImage()">Upload Image</button>
         </div>
     </div>
     <div class="folder-list" id="folderTabs"></div>
     <div class="gallery-grid" id="galleryGrid"></div>
 </section>
 
-<div id="loginModal" class="modal hidden">
-    <div class="modal-content">
-        <h3>Administrator Login</h3>
-        <br>
-        <input type="password" id="passwordInput" placeholder="Password...">
-        <br><br>
-        <button class="btn" onclick="checkPassword()">Login</button>
-        <button class="btn" style="background: #666;" onclick="closeLogin()">Cancel</button>
-        <p id="loginError" style="color: red; margin-top: 10px;"></p>
-    </div>
-</div>
+<div id="lightbox" onclick="this.style.display='none'"><img id="lightboxImg" src=""></div>
 
 <script src="script.js"></script>
 </body>
