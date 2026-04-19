@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chhingchhip Mualpui Br. KTP</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="light">
+
+<header>
+    <div class="logo">
+        <img src="https://i.pinimg.com/736x/c4/63/80/c46380515200eca4015ba39e78eebfa6.jpg" alt="Logo">
+        <h2>Chhingchhip Mualpui Br. <span>KTP</span></h2>
+    </div>
+    <nav>
+        <ul id="navLinks">
+            <li><a onclick="showSection('home')">Home</a></li>
+            <li><a onclick="showSection('member-page')">Member List</a></li>
+            <li><a onclick="showSection('gallery-page')">Gallery</a></li>
+        </ul>
+        <button class="theme-toggle" onclick="toggleTheme()"><i id="themeIcon" class="fas fa-moon"></i></button>
+    </nav>
+</header>
+
+<div id="home" class="section">
+    <section class="hero">
+        <div class="left-content">
+            <h1 class="chibai">Chibai le</h1>
+            <p>Kristian Ṭhalai Pawl,<br>Chhingchhip Mualpui Branch </p>
+            <button class="btn" onclick="showSection('member-page')">Member List 2026 →</button>
+            <button class="btn" style="background: #6f42c1;" onclick="showHruaitute()">2026 Hruaitute →</button>
+            <div class="scroll-down"><i class="fas fa-chevron-down"></i> Scroll Down</div>
+        </div>
+        <div class="right-content">
+            <img src="https://i.pinimg.com/736x/c4/63/80/c46380515200eca4015ba39e78eebfa6.jpg" alt="Main Logo" style="width: 350px;">
+        </div>
+    </section>
+
+    <section class="extra-content">
+        <div class="kumpuan-box">
+            <h2 style="font-size: 28px; margin-bottom: 10px;">KUMPUAN 2026</h2>
+            <h1 style="font-size: 40px; letter-spacing: 2px;">"Music Zir Uar"</h1>
+        </div>
+        <div class="project-grid">
+            <div class="project-card"><h3><i class="fas fa-church"></i> KTP Room sak</h3><p>Kumin chhunga kan Branch project lian ber tur a ni.</p></div>
+            <div class="project-card"><h3><i class="fas fa-hand-holding-heart"></i> Music Instrument lei</h3><p>Music zir uar kum anih avangin lei belh tum a ni.</p></div>
+            <div class="project-card"><h3><i class="fas fa-music"></i> Zaipawl MV siam</h3><p>Kohhran zaipawl te'n MV kan neih theih nan hmalak mek a ni.</p></div>
+        </div>
+    </section>
+</div>
+
+<section id="member-page" class="container section hidden">
+    <h2>Member List 2026</h2>
+    <div class="progress-box">
+        <div id="progressBar" class="progress-bar"></div>
+        <div class="progress-text">Progression: <span id="memberCount">0</span> / 100 Members</div>
+    </div>
+    <div class="input-group">
+        <input type="text" id="nameInput" placeholder="Member hming ziak rawh...">
+        <select id="sectionInput">
+            <option value="Mualpui Kawn">Mualpui kawn</option>
+            <option value="Hmarveng">Hmarveng</option>
+            <option value="Biak in Veng">Biak In Veng</option>
+            <option value="Bangla">Bangla</option> 
+        </select>
+        <button id="addBtn" class="add-btn" onclick="addMember()">Add Member</button>
+        <button id="updateBtn" class="add-btn hidden" style="background: #ffc107; color: #000;" onclick="saveEdit()">Update Member</button>
+    </div>
+    <table>
+        <thead>
+            <tr><th>No.</th><th>Hming</th><th>Section</th><th>Action</th></tr>
+        </thead>
+        <tbody id="memberListTable"></tbody>
+    </table>
+</section>
+
+<section id="gallery-page" class="container section hidden">
+    <h2>Picture Gallery</h2>
+    <br>
+    <div style="background: var(--bg-color); padding: 20px; border-radius: 10px; border: 1px solid var(--border-color);">
+        <p><b>Administrator Controls:</b></p><br>
+        <div class="input-group">
+            <input type="text" id="folderNameInput" placeholder="Folder hming thar siamna...">
+            <button class="add-btn" onclick="createFolder()" style="background: #1e73be;">Create Folder</button>
+        </div>
+        <div class="input-group">
+            <select id="uploadFolderSelect"></select>
+            <input type="file" id="imageInput" accept="image/*">
+            <button class="add-btn" onclick="uploadImage()">Upload Image</button>
+        </div>
+    </div>
+    <div class="folder-list" id="folderTabs"></div>
+    <div class="gallery-grid" id="galleryGrid"></div>
+</section>
+
+<div id="lightbox" onclick="this.style.display='none'"><img id="lightboxImg" src=""></div>
+
+<script src="script.js"></script>
+</body>
+</html>
