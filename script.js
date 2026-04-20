@@ -34,7 +34,7 @@ function addMember() {
     renderMembers();
 }
 function deleteMember(id) {
-    if(confirm("Delete tak tak em?")) {
+    if(confirm("Delete i duh tak tak em?")) {
         members = members.filter(m => m.id !== id);
         localStorage.setItem('ktpData', JSON.stringify(members));
         renderMembers();
