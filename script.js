@@ -44,7 +44,20 @@ function renderMembers() {
     const listTable = document.getElementById('memberListTable');
     listTable.innerHTML = "";
     members.forEach((m, index) => {
-        listTable.innerHTML += `<tr><td>${index+1}</td><td>${m.name}</td><td>${m.section}</td><td><button class="delete-btn" onclick="deleteMember(${m.id})"><i class="fas fa-trash"></i></button></td></tr>`;
+        listTable.innerHTML += `
+            <tr>
+                <td>${index+1}</td>
+                <td>${m.name}</td>
+                <td>${m.section}</td>
+                <td>
+                    <button class="edit-btn" onclick="editMember(${m.id})" style="color: #ffc107; background:none; border:none; cursor:pointer; font-size:18px; margin-right:10px;">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="delete-btn" onclick="deleteMember(${m.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>`;
     });
     document.getElementById('progressBar').style.width = Math.min((members.length / 100) * 100, 100) + "%";
     document.getElementById('memberCount').innerText = members.length;
@@ -97,3 +110,19 @@ function showHruaitute() { alert("Leader: H.Lalrinkima\nAsst. Leader: T.Upa RK R
 
 // Initial Render
 renderMembers();
+
+// Hming edit-na tur function
+function editMember(id) {
+    // 1. Array atangin kan hming duh lai kha kan zawng chhuak ang
+    const memberToEdit = members.find(m => m.id === id);
+    
+    // 2. Prompt box hmangin hming thar kan zawt ang
+    const newName = prompt("Hming thar ziak rawh:", memberToEdit.name);
+    
+    // 3. User-in hming a thlak chuan kan update ang
+    if (newName !== null && newName.trim() !== "") {
+        memberToEdit.name = newName.trim(); // Hming kan thlak
+        localStorage.setItem('ktpData', JSON.stringify(members)); // Save lehna
+        renderMembers(); // Table rawn update-na
+    }
+}
