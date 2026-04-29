@@ -126,3 +126,38 @@ function editMember(id) {
         renderMembers(); // Table rawn update-na
     }
 }
+/ 5. I renderMembers function hlui kha hei hian thlak (overwrite) rawh:
+function renderMembers() {
+    const listTable = document.getElementById('memberListTable');
+    listTable.innerHTML = "";
+    members.forEach((m, index) => {
+        listTable.innerHTML += `
+            <tr>
+                <td>${index+1}</td>
+                <td>${m.name}</td>
+                <td>${m.section}</td>
+                <td class="admin-actions" style="display: ${isAdmin ? 'table-cell' : 'none'}">
+                    <button class="edit-btn" onclick="editMember(${m.id})" style="color: #ffc107; background:none; border:none; cursor:pointer; font-size:18px; margin-right:10px;">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="delete-btn" onclick="deleteMember(${m.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>`;
+    });
+    
+    // Admin anih loh chuan Action column hi thup tel tur
+    document.querySelector('th:nth-child(4)').style.display = isAdmin ? 'table-cell' : 'none';
+    
+    document.getElementById('progressBar').style.width = Math.min((members.length / 100) * 100, 100) + "%";
+    document.getElementById('memberCount').innerText = members.length;
+    checkAdminPrivileges();
+}
+
+// Gallery render pawh Admin check turin kan siamrem deuh ang
+const originalRenderGallery = renderGallery;
+renderGallery = function() {
+    originalRenderGallery();
+    checkAdminPrivileges();
+}
