@@ -16,14 +16,26 @@
     </div>
     <nav>
         <ul id="navLinks">
-          
-            <li><a onclick="showSection('home')">Home</a></li>
-            <li><a onclick="showSection('member-page')">Member List</a></li>
-            <li><a onclick="showSection('gallery-page')">Gallery</a></li>
+            <li><a style="cursor:pointer" onclick="showSection('home')">Home</a></li>
+            <li><a style="cursor:pointer" onclick="showSection('member-page')">Member List</a></li>
+            <li><a style="cursor:pointer" onclick="showSection('gallery-page')">Gallery</a></li>
+            <li><a style="cursor:pointer; color: #ffc107;" onclick="showSection('login-section')">Admin Login</a></li>
         </ul>
         <button class="theme-toggle" onclick="toggleTheme()"><i id="themeIcon" class="fas fa-moon"></i></button>
     </nav>
 </header>
+
+<div id="login-section" class="container section hidden">
+    <div style="max-width: 400px; margin: 50px auto; padding: 20px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--card-bg);">
+        <h3>Admin Login</h3><br>
+        <div class="input-group">
+            <input type="email" id="loginEmail" placeholder="Email...">
+            <input type="password" id="loginPassword" placeholder="Password...">
+            <button class="add-btn" onclick="login()">Sign In</button>
+            <button class="admin-only" onclick="logout()" style="display:none; background: #dc3545; margin-top: 10px;">Sign Out</button>
+        </div>
+    </div>
+</div>
 
 <div id="home" class="section">
     <section class="hero">
@@ -35,10 +47,10 @@
             <div class="scroll-down"><i class="fas fa-chevron-down"></i> Scroll Down</div>
         </div>
         <div class="right-content">
-            <img src="https://i.pinimg.com/736x/c4/63/80/c46380515200eca4015ba39e78eebfa6.jpg" alt="Main Logo" style="width: 350px;">
+            <img src="https://i.pinimg.com/736x/c4/63/80/c46380515200eca4015ba39e78eebfa6.jpg" alt="Main Logo" style="width: 300px;">
         </div>
     </section>
-
+    
     <section class="extra-content">
         <div class="kumpuan-box">
             <h2 style="font-size: 28px; margin-bottom: 10px;">KUMPUAN 2026</h2>
@@ -58,7 +70,8 @@
         <div id="progressBar" class="progress-bar"></div>
         <div class="progress-text">Progression: <span id="memberCount">0</span> / 100 Members</div>
     </div>
-    <div class="input-group">
+
+    <div class="input-group admin-only" style="display:none;">
         <input type="text" id="nameInput" placeholder="Member hming ziak rawh...">
         <select id="sectionInput">
             <option value="Mualpui Kawn">Mualpui kawn</option>
@@ -68,35 +81,40 @@
         </select>
         <button class="add-btn" onclick="addMember()">Add Member</button>
     </div>
+
     <table>
         <thead>
-            <tr><th>No.</th><th>Hming</th><th>Section</th><th>Action</th></tr>
+            <tr><th>No.</th><th>Hming</th><th>Section</th><th class="admin-only" style="display:none;">Action</th></tr>
         </thead>
         <tbody id="memberListTable"></tbody>
     </table>
 </section>
 
+<!-- Member Page Table Header-ah 'Action' kha a awm sa a, a hnuai script hian a rawn thlak ang -->
+
+<!-- Gallery Page (He chin hi thlak rawh) -->
 <section id="gallery-page" class="container section hidden">
     <h2>Picture Gallery</h2>
-    <br>
-    <div style="background: var(--bg-color); padding: 20px; border-radius: 10px; border: 1px solid var(--border-color);">
-        <p><b>Administrator Controls:</b></p><br>
-        <div class="input-group">
-            <input type="text" id="folderNameInput" placeholder="Folder hming thar siamna...">
-            <button class="add-btn" onclick="createFolder()" style="background: #1e73be;">Create Folder</button>
-        </div>
-        <div class="input-group">
-            <select id="uploadFolderSelect"></select>
+    
+    <!-- Admin Upload Form (Mahni duh Folder hming pekna) -->
+    <div class="admin-only" style="display:none; background: var(--card-bg); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+        <h4>Upload New Picture</h4><br>
+        <div style="margin-bottom: 10px;">
+            <input type="text" id="customCategoryInput" placeholder="Folder hming (e.g. Sport, Camping...)" style="padding: 8px; width: 100%; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ccc;">
             <input type="file" id="imageInput" accept="image/*">
-            <button class="add-btn" onclick="uploadImage()">Upload Image</button>
         </div>
+        <button class="add-btn" onclick="uploadImage()">Upload to Gallery</button>
+        <p id="uploadStatus" style="font-size: 12px; margin-top: 5px; color: #28a745;"></p>
     </div>
-    <div class="folder-list" id="folderTabs"></div>
+
+    <!-- Folders (Filter buttons lo lanna tur) -->
+    <div id="folderFilters" style="margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px;">
+        <!-- Button ho hi script-in a rawn siam chawp ang -->
+    </div>
+
     <div class="gallery-grid" id="galleryGrid"></div>
 </section>
 
-<div id="lightbox" onclick="this.style.display='none'"><img id="lightboxImg" src=""></div>
-
-<script src="script.js"></script>
+<script type="module" src="script.js"></script>
 </body>
 </html>
