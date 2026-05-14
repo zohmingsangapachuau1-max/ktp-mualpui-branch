@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Login - KTP Mualpui</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .login-container { max-width: 400px; margin: 100px auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); text-align: center; }
+        input { width: 100%; padding: 10px; margin: 10px 0; }
+        .login-btn { background: #1e73be; color: white; border: none; padding: 10px 20px; cursor: pointer; width: 100%; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Admin Login</h2>
+        <input type="email" id="adminEmail" placeholder="Email Address">
+        <input type="password" id="adminPassword" placeholder="Password">
+        <button class="login-btn" onclick="handleLogin()">Login</button>
+        <p><a href="index.html">Back to Home</a></p>
+    </div>
+
+    <script type="module">
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.x.x/firebase-auth.js";
+        // I script.js-a Firebase config kha hetah hian rawn copy-paste leh rawh
+        // ... (firebaseConfig setup kha) ...
+        
+        window.handleLogin = async () => {
+            const email = document.getElementById('adminEmail').value;
+            const pass = document.getElementById('adminPassword').value;
+            const auth = getAuth();
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+                alert("Login Successful!");
+                window.location.href = "index.html"; // Login hlawhtlin chuan home-ah a let ang
+            } catch (err) {
+                alert("Login failed: " + err.message);
+            }
+        };
+    </script>
+</body>
+</html>
