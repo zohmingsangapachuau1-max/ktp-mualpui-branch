@@ -1,10 +1,36 @@
-// Data structures
-let members = JSON.parse(localStorage.getItem('ktpData')) || [];
-let galleryData = JSON.parse(localStorage.getItem('ktpGalleryV2')) || { folders: ["General"], images: [] };
-let currentFolder = "General";
+// 1. Firebase SDK Imports
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
-// Theme Logic
-function toggleTheme() {
+const firebaseConfig = {
+    apiKey: "AIzaSyCjdGn_NPL2Lf624WgXZT5-1269Gk5JXXo",
+    authDomain: "ktp-website-6d9a4.firebaseapp.com",
+    projectId: "ktp-website-6d9a4",
+    storageBucket: "ktp-website-6d9a4.firebasestorage.app",
+    messagingSenderId: "105360862232",
+    appId: "1:105360862232:web:4630f68fe7fb8e2d70a76d"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+const storage = getStorage(app);
+
+let members = [];
+let galleryImages = [];
+let currentCategory = 'All'; // Filter tana hman tur
+
+// --- GLOBAL FUNCTIONS (WINDOW OBJECT) ---
+
+window.showSection = function(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+    const target = document.getElementById(id);
+    if (target) target.classList.remove('hidden');
+}
+
+window.toggleTheme = function() {
     const body = document.body;
     const icon = document.getElementById('themeIcon');
     if (body.getAttribute('data-theme') === 'light') {
@@ -16,115 +42,166 @@ function toggleTheme() {
     }
 }
 
-function showSection(id) {
-    document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
-    document.getElementById(id).classList.remove('hidden');
-    if(id === 'member-page') renderMembers();
-    if(id === 'gallery-page') { renderFolders(); renderGallery(); }
+window.showHruaitute = function() {
+    alert("2026 HRUAITUTE:\n\nLeader: H.Lalrinkima\nSecretary: C.Lalnunthara\nTreasurer: T.Upa VL.Hmangaiha");
 }
 
-// --- MEMBER LOGIC ---
-function addMember() {
-    const name = document.getElementById('nameInput').value;
-    const section = document.getElementById('sectionInput').value;
-    if(!name) return alert("Hming ziak rawh!");
-    members.push({ id: Date.now(), name, section });
-    localStorage.setItem('ktpData', JSON.stringify(members));
-    document.getElementById('nameInput').value = "";
-    renderMembers();
-}
-function deleteMember(id) {
-    if(confirm("Delete i duh tak tak em?")) {
-        members = members.filter(m => m.id !== id);
-        localStorage.setItem('ktpData', JSON.stringify(members));
-        renderMembers();
+// --- ADMIN ACTIONS ---
+
+window.login = async function() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    if(!email || !password) return alert("Email leh Password chhu lut rawh!");
+    try {
+        await signInWithEmailAndPassword(auth, email, password);
+        alert("Admin-ah i lut ta!");
+        window.showSection('home');
+    } catch (error) {
+        alert("Login error: " + error.message);
     }
 }
+
+window.logout = async function() {
+    await signOut(auth);
+    alert("I chhuak ta!");
+    location.reload();
+}
+
+window.addMember = async function() {
+    const name = document.getElementById('nameInput').value.trim();
+    const section = document.getElementById('sectionInput').value;
+    if(!name) return alert("Hming ziak rawh!");
+    try {
+        await addDoc(collection(db, "members"), { name, section, createdAt: Date.now() });
+        document.getElementById('nameInput').value = "";
+    } catch (e) { alert("Admin login a ngai a ni."); }
+}
+
+// --- EDIT MEMBER (THAR) ---
+window.editMember = async function(id, oldName) {
+    const newName = prompt("Hming thar tur ziak rawh:", oldName);
+    if (newName && newName.trim() !== "" && newName !== oldName) {
+        try {
+            await updateDoc(doc(db, "members", id), { name: newName.trim() });
+        } catch (e) { alert("Update failed."); }
+    }
+}
+
+window.deleteMember = async function(id) {
+    if(confirm("I delete duh tak tak em?")) {
+        try { await deleteDoc(doc(db, "members", id)); } 
+        catch (e) { alert("Permission denied."); }
+    }
+}
+
+// --- GALLERY CATEGORY FILTER (THAR) ---
+window.setCategory = function(cat) {
+    currentCategory = cat;
+    renderGallery();
+}
+
+// --- GALLERY UPLOAD (FOLDER HMING TELIN) ---
+
+window.uploadImage = async function() {
+    const fileInput = document.getElementById('imageInput');
+    const customCatInput = document.getElementById('customCategoryInput');
+    const file = fileInput.files[0];
+    const category = customCatInput.value.trim() || "General"; // Folder hming i type kha
+    const status = document.getElementById('uploadStatus');
+    
+    if(!file) return alert("Thlalak thlang hmasa rawh!");
+
+    status.innerText = "Uploading to '" + category + "'... Lo nghak lawk rawh.";
+    try {
+        const storageRef = ref(storage, `gallery/${category}/${Date.now()}_${file.name}`);
+        await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(storageRef);
+        
+        await addDoc(collection(db, "gallery"), { url, category, createdAt: Date.now() });
+        status.innerText = "Upload Hlawhtling!";
+        fileInput.value = "";
+        customCatInput.value = "";
+    } catch (e) {
+        alert("Upload failed: " + e.message);
+        status.innerText = "";
+    }
+}
+
+// --- RENDERING ---
+
 function renderMembers() {
     const listTable = document.getElementById('memberListTable');
+    if (!listTable) return;
     listTable.innerHTML = "";
     members.forEach((m, index) => {
         listTable.innerHTML += `
             <tr>
-                <td>${index+1}</td>
+                <td>${index + 1}</td>
                 <td>${m.name}</td>
                 <td>${m.section}</td>
                 <td>
-                    <button class="edit-btn" onclick="editMember(${m.id})" style="color: #ffc107; background:none; border:none; cursor:pointer; font-size:18px; margin-right:10px;">
+                    <button class="admin-only" onclick="editMember('${m.id}', '${m.name}')" style="color:orange; background:none; border:none; cursor:pointer; display:${auth.currentUser ? 'inline-block' : 'none'}; margin-right: 10px;">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="delete-btn" onclick="deleteMember(${m.id})">
+                    <button class="admin-only" onclick="deleteMember('${m.id}')" style="color:red; background:none; border:none; cursor:pointer; display:${auth.currentUser ? 'inline-block' : 'none'};">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
             </tr>`;
     });
-    document.getElementById('progressBar').style.width = Math.min((members.length / 100) * 100, 100) + "%";
     document.getElementById('memberCount').innerText = members.length;
+    document.getElementById('progressBar').style.width = Math.min((members.length / 100) * 100, 100) + "%";
 }
 
-// --- GALLERY LOGIC ---
-function createFolder() {
-    const name = document.getElementById('folderNameInput').value.trim();
-    if(!name || galleryData.folders.includes(name)) return;
-    galleryData.folders.push(name);
-    saveGallery();
-    document.getElementById('folderNameInput').value = "";
-    renderFolders();
-}
-function renderFolders() {
-    const tabs = document.getElementById('folderTabs');
-    const select = document.getElementById('uploadFolderSelect');
-    tabs.innerHTML = ""; select.innerHTML = "";
-    galleryData.folders.forEach(f => {
-        tabs.innerHTML += `<div class="folder-tab ${f === currentFolder ? 'active' : ''}" onclick="selectFolder('${f}')">${f}</div>`;
-        select.innerHTML += `<option value="${f}">${f}</option>`;
-    });
-}
-function selectFolder(name) { currentFolder = name; renderFolders(); renderGallery(); }
-function uploadImage() {
-    const file = document.getElementById('imageInput').files[0];
-    const folder = document.getElementById('uploadFolderSelect').value;
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        galleryData.images.push({ id: Date.now(), src: e.target.result, folder: folder });
-        saveGallery(); renderGallery();
-    };
-    reader.readAsDataURL(file);
-}
 function renderGallery() {
     const grid = document.getElementById('galleryGrid');
+    const filterContainer = document.getElementById('folderFilters');
+    if(!grid || !filterContainer) return;
+
+    // 1. Folder Buttons siam (Mahni duh duh Category-a lo awm turin)
+    const allCategories = ['All', ...new Set(galleryImages.map(img => img.category || 'General'))];
+    filterContainer.innerHTML = allCategories.map(cat => `
+        <button class="btn" onclick="setCategory('${cat}')" style="font-size: 12px; padding: 5px 12px; ${currentCategory === cat ? 'background: #007bff; color: white;' : ''}">
+            ${cat}
+        </button>
+    `).join('');
+
+    // 2. Thlalak Filtered display
     grid.innerHTML = "";
-    galleryData.images.filter(img => img.folder === currentFolder).forEach(img => {
-        grid.innerHTML += `<div class="gallery-item">
-            <button class="del-img-btn" onclick="event.stopPropagation(); deleteImage(${img.id})">×</button>
-            <img src="${img.src}" onclick="openLightbox('${img.src}')">
-        </div>`;
+    const filtered = currentCategory === 'All' ? galleryImages : galleryImages.filter(img => (img.category || 'General') === currentCategory);
+
+    filtered.forEach(img => {
+        grid.innerHTML += `
+            <div class="gallery-card" style="margin-bottom: 20px; text-align: center; border: 1px solid #eee; padding: 10px; border-radius: 10px;">
+                <p style="font-size: 10px; color: gray; margin: 0 0 5px 0;">Folder: ${img.category || 'General'}</p>
+                <img src="${img.url}" alt="KTP Pic" style="width: 100%; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                <br>
+                <a href="${img.url}" target="_blank" download class="btn" style="display: inline-block; margin-top: 10px; padding: 5px 15px; font-size: 13px; text-decoration: none;">
+                    <i class="fas fa-download"></i> Download
+                </a>
+            </div>`;
     });
 }
-function deleteImage(id) { galleryData.images = galleryData.images.filter(img => img.id !== id); saveGallery(); renderGallery(); }
-function openLightbox(src) { document.getElementById('lightboxImg').src = src; document.getElementById('lightbox').style.display = 'flex'; }
-function saveGallery() { localStorage.setItem('ktpGalleryV2', JSON.stringify(galleryData)); }
-function showHruaitute() { alert("Leader: H.Lalrinkima\nAsst. Leader: T.Upa RK Rosiamkima\nSecretary: C.Lalnunthara\nAsst.Secretary: B.Lalrinngheta\nTreasurer: T.Upa VL.Hmangaiha\nFin.Secretary: Lalzahawma"); }
 
-// Initial Render
-renderMembers();
-
-// Hming edit-na tur function
-function editMember(id) {
-    // 1. Array atangin kan hming duh lai kha kan zawng chhuak ang
-    const memberToEdit = members.find(m => m.id === id);
-    
-    // 2. Prompt box hmangin hming thar kan zawt ang
-    const newName = prompt("Hming thar ziak rawh:", memberToEdit.name);
-    
-    // 3. User-in hming a thlak chuan kan update ang
-    if (newName !== null && newName.trim() !== "") {
-        memberToEdit.name = newName.trim(); // Hming kan thlak
-        localStorage.setItem('ktpData', JSON.stringify(members)); // Save lehna
-        renderMembers(); // Table rawn update-na
-    }
+function updateAdminUI(user) {
+    const adminElements = document.querySelectorAll('.admin-only');
+    adminElements.forEach(el => {
+        el.style.display = user ? 'block' : 'none';
+        if(el.tagName === 'BUTTON') el.style.display = user ? 'inline-block' : 'none';
+    });
+    renderMembers(); // Re-render to show/hide edit/delete icons
 }
 
+// --- FIREBASE LISTENERS ---
 
+onSnapshot(collection(db, "members"), (snapshot) => {
+    members = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderMembers();
+});
+
+onSnapshot(collection(db, "gallery"), (snapshot) => {
+    galleryImages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderGallery();
+});
+
+onAuthStateChanged(auth, updateAdminUI);
