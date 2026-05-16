@@ -341,16 +341,88 @@ th {
 /* ===== RESPONSIVE DESIGN ===== */
 @media(max-width:900px){ 
     header { 
-        padding: 10px 20px; 
+        padding: 15px 20px; 
         flex-direction: column; 
-        gap: 10px; 
+        gap: 15px; 
+        text-align: center;
     } 
+
+    nav {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    nav ul {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+    }
+
+    /* Hero Section phone tawk tura siamna */
     .hero { 
-        flex-direction: column; 
+        flex-direction: column-reverse; /* Thlalak a chungah, text a hnuai zawkah */
         text-align: center; 
-        padding: 20px; 
+        padding: 40px 20px; 
+        min-height: auto;
+        gap: 30px;
     } 
+
+    .left-content {
+        max-width: 100%;
+    }
+
+    .chibai {
+        font-size: 38px; /* Phone-ah chuan a lian lutuk kha kan tite ta a ni */
+        margin-bottom: 15px;
+    }
+
+    .btn {
+        width: 100%; /* Phone-ah chuan button kha a phei zawnga chep lutuk lo turin 100% kan pe */
+        max-width: 300px;
+    }
+
+    /* Kumpuan Box leh Section padding danglamna */
+    .extra-content {
+        padding: 30px 15px;
+    }
+
+    .kumpuan-box {
+        padding: 25px 15px;
+        border-radius: 15px;
+    }
+
+    /* Container phone tawk chiah tura siamremna */
+    .container {
+        margin: 15px auto;
+        padding: 15px;
+        border-radius: 10px;
+        width: 95%;
+    }
+
+    /* Input group ho kha tlar phei loin a indawt (vertical) in an awm vek dâwn a ni */
     .input-group { 
         flex-direction: column; 
+        gap: 10px;
+        width: 100%;
     } 
+
+    input, select, .add-btn {
+        width: 100%;
+        flex: none;
+    }
+
+    /* ====== TABLE RESPONSIVE WRAPPER ====== */
+    /* Member list table leh committee table kha phone screen tawt lutuk vanga a keh chhiat loh nan */
+    table {
+        display: block;
+        width: 100%;
+        overflow-x: auto; /* Veilam leh dinglamah muangmârin a pawt (scroll) theih ang */
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    th, td { 
+        padding: 10px 8px; 
+        font-size: 14px;
+    }
 }
