@@ -57,8 +57,8 @@
             <h1 style="font-size: 40px; letter-spacing: 2px;">"Music Zir Uar"</h1>
         </div>
         <div class="project-grid">
-            <div class="project-card"><h3><i class="fas fa-church"></i> Laptop thar lei</h3><p>Kumin chhunga Branch project pawimawh ber pakhat tur a ni.</p></div>
-            <div class="project-card"><h3><i class="fas fa-hand-holding-heart"></i> Music Instrument lei</h3><p>Music zir uar kum anih avangin lei belh tum a ni.</p></div>
+            <div class="project-card"><h3><i class="fas fa-laptop"></i> Laptop thar lei</h3><p>Hruaitute leh member te thawhrimna a zarah tih hlawhtlin tawh a ni.</p></div>
+            <div class="project-card"><h3><i class="fas fa-guitar"></i> Music Instrument lei</h3><p>Music zir uar kum anih avangin lei belh tum a ni.</p></div>
             <div class="project-card"><h3><i class="fas fa-music"></i> Zaipawl MV siam</h3><p>Kohhran zaipawl te'n MV kan neih theih nan hmalak mek a ni.</p></div>
         </div>
     </section>
@@ -68,35 +68,52 @@
     <h2>Member List 2026</h2>
     <div class="progress-box">
         <div id="progressBar" class="progress-bar"></div>
-        <div class="progress-text">Progression: <span id="memberCount">0</span> / 100 Members</div>
+        <div class="progress-text">Progression: <span id="memberCount">0</span> Members</div>
     </div>
 
-    <div class="input-group admin-only" style="display:none;">
-        <input type="text" id="nameInput" placeholder="Member hming ziak rawh...">
+    <!-- Admin Member Add-na Form (Group Thlanna Telin) -->
+    <div class="input-group admin-only" style="display:none; margin-bottom: 20px;">
+        <input type="text" id="nameInput" placeholder="Member hming ziak lut rawh...">
         <select id="sectionInput">
             <option value="Mualpui Kawn">Mualpui kawn</option>
             <option value="Hmarveng">Hmarveng</option>
             <option value="Biak in Veng">Biak In Veng</option>
-            <option value="Bangla">Bangla</option> 
+            <option value="Bangla">Bangla Veng</option> 
+        </select>
+        <!-- Group thlanna dah belh a ni -->
+        <select id="groupInput">
+            <option value="Khawngaihna Group">Khawngaihna Group</option>
+            <option value="Hmangaihna Group">Hmangaihna Group</option>
+            <option value="Remna Group">Remna Group</option>
         </select>
         <button class="add-btn" onclick="addMember()">Add Member</button>
     </div>
 
+    <!-- Group Filter Buttons (Group hrang hrang thliar hranna) -->
+    <div id="groupFilters" style="margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 10px;">
+        <button class="btn" onclick="setGroupFilter('All')" style="font-size: 13px; padding: 6px 14px;">All Groups</button>
+        <button class="btn" onclick="setGroupFilter('Khawngaihna Group')" style="font-size: 13px; padding: 6px 14px;">Khawngaihna</button>
+        <button class="btn" onclick="setGroupFilter('Hmangaihna Group')" style="font-size: 13px; padding: 6px 14px;">Hmangaihna</button>
+        <button class="btn" onclick="setGroupFilter('Remna Group')" style="font-size: 13px; padding: 6px 14px;">Remna</button>
+    </div>
+
     <table>
         <thead>
-            <tr><th>No.</th><th>Hming</th><th>Section</th><th class="admin-only" style="display:none;">Action</th></tr>
+            <tr>
+                <th>No.</th>
+                <th>Hming</th>
+                <th>Section</th>
+                <th>Group</th>
+                <th>Action</th>
+            </tr>
         </thead>
         <tbody id="memberListTable"></tbody>
     </table>
 </section>
 
-<!-- Member Page Table Header-ah 'Action' kha a awm sa a, a hnuai script hian a rawn thlak ang -->
-
-<!-- Gallery Page (He chin hi thlak rawh) -->
 <section id="gallery-page" class="container section hidden">
     <h2>Picture Gallery</h2>
     
-    <!-- Admin Upload Form (Mahni duh Folder hming pekna) -->
     <div class="admin-only" style="display:none; background: var(--card-bg); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
         <h4>Upload New Picture</h4><br>
         <div style="margin-bottom: 10px;">
@@ -107,11 +124,7 @@
         <p id="uploadStatus" style="font-size: 12px; margin-top: 5px; color: #28a745;"></p>
     </div>
 
-    <!-- Folders (Filter buttons lo lanna tur) -->
-    <div id="folderFilters" style="margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px;">
-        <!-- Button ho hi script-in a rawn siam chawp ang -->
-    </div>
-
+    <div id="folderFilters" style="margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px;"></div>
     <div class="gallery-grid" id="galleryGrid"></div>
 </section>
 
