@@ -43,7 +43,7 @@ window.toggleTheme = function() {
 }
 
 window.showHruaitute = function() {
-    alert("2026 HRUAITUTE:\n\nLeader: H.Lalrinkima\nSecretary: C.Lalnunthara\nTreasurer: T.Upa VL.Hmangaiha");
+    alert("2026 HRUAITUTE:\n\nLeader: H.Lalrinkima\nAsst. Leader: T.Upa RK Rosiamkima\nSecretary: C.Lalnunthara\nAsst.Secretary: B.Lalrinngheta\nTreasurer: T.Upa VL.Hmangaiha\nFin.Secretary: Lalzahawma");
 }
 
 // --- ADMIN ACTIONS ---
