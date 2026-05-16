@@ -20,7 +20,8 @@ const storage = getStorage(app);
 
 let members = [];
 let galleryImages = [];
-let currentCategory = 'All'; // Filter tana hman tur
+let currentCategory = 'All'; // Gallery filter
+let currentGroupFilter = 'All'; // Member Group filter thar atan
 
 // --- GLOBAL FUNCTIONS (WINDOW OBJECT) ---
 
@@ -70,14 +71,16 @@ window.logout = async function() {
 window.addMember = async function() {
     const name = document.getElementById('nameInput').value.trim();
     const section = document.getElementById('sectionInput').value;
+    const group = document.getElementById('groupInput').value; // Group value lak belhna
+    
     if(!name) return alert("Hming ziak rawh!");
     try {
-        await addDoc(collection(db, "members"), { name, section, createdAt: Date.now() });
+        await addDoc(collection(db, "members"), { name, section, group, createdAt: Date.now() });
         document.getElementById('nameInput').value = "";
     } catch (e) { alert("Admin login a ngai a ni."); }
 }
 
-// --- EDIT MEMBER (THAR) ---
+// --- EDIT MEMBER ---
 window.editMember = async function(id, oldName) {
     const newName = prompt("Hming thar tur ziak rawh:", oldName);
     if (newName && newName.trim() !== "" && newName !== oldName) {
@@ -94,19 +97,37 @@ window.deleteMember = async function(id) {
     }
 }
 
-// --- GALLERY CATEGORY FILTER (THAR) ---
+// --- GROUP FILTER FUNCTION (THAR) ---
+window.setGroupFilter = function(groupName) {
+    currentGroupFilter = groupName;
+    
+    // UI chei mawi deuh nana filter button active lai color thlakna
+    const buttons = document.querySelectorAll('#groupFilters .btn');
+    buttons.forEach(btn => {
+        if(btn.getAttribute('onclick').includes(`'${groupName}'`)) {
+            btn.style.background = "#007bff";
+            btn.style.color = "white";
+        } else {
+            btn.style.background = "";
+            btn.style.color = "";
+        }
+    });
+    
+    renderMembers();
+}
+
+// --- GALLERY CATEGORY FILTER ---
 window.setCategory = function(cat) {
     currentCategory = cat;
     renderGallery();
 }
 
-// --- GALLERY UPLOAD (FOLDER HMING TELIN) ---
-
+// --- GALLERY UPLOAD ---
 window.uploadImage = async function() {
     const fileInput = document.getElementById('imageInput');
     const customCatInput = document.getElementById('customCategoryInput');
     const file = fileInput.files[0];
-    const category = customCatInput.value.trim() || "General"; // Folder hming i type kha
+    const category = customCatInput.value.trim() || "General";
     const status = document.getElementById('uploadStatus');
     
     if(!file) return alert("Thlalak thlang hmasa rawh!");
@@ -133,12 +154,19 @@ function renderMembers() {
     const listTable = document.getElementById('memberListTable');
     if (!listTable) return;
     listTable.innerHTML = "";
-    members.forEach((m, index) => {
+    
+    // Group filter a zira data thliar hran dawt dawtna
+    const filteredMembers = currentGroupFilter === 'All' 
+        ? members 
+        : members.filter(m => m.group === currentGroupFilter);
+
+    filteredMembers.forEach((m, index) => {
         listTable.innerHTML += `
             <tr>
                 <td>${index + 1}</td>
                 <td>${m.name}</td>
                 <td>${m.section}</td>
+                <td>${m.group || 'Group Neilo'}</td>
                 <td>
                     <button class="admin-only" onclick="editMember('${m.id}', '${m.name}')" style="color:orange; background:none; border:none; cursor:pointer; display:${auth.currentUser ? 'inline-block' : 'none'}; margin-right: 10px;">
                         <i class="fas fa-edit"></i>
@@ -149,8 +177,9 @@ function renderMembers() {
                 </td>
             </tr>`;
     });
-    document.getElementById('memberCount').innerText = members.length;
-    document.getElementById('progressBar').style.width = Math.min((members.length / 100) * 100, 100) + "%";
+    
+    document.getElementById('memberCount').innerText = filteredMembers.length;
+    document.getElementById('progressBar').style.width = Math.min((filteredMembers.length / 1000) * 100, 100) + "%";
 }
 
 function renderGallery() {
@@ -158,7 +187,6 @@ function renderGallery() {
     const filterContainer = document.getElementById('folderFilters');
     if(!grid || !filterContainer) return;
 
-    // 1. Folder Buttons siam (Mahni duh duh Category-a lo awm turin)
     const allCategories = ['All', ...new Set(galleryImages.map(img => img.category || 'General'))];
     filterContainer.innerHTML = allCategories.map(cat => `
         <button class="btn" onclick="setCategory('${cat}')" style="font-size: 12px; padding: 5px 12px; ${currentCategory === cat ? 'background: #007bff; color: white;' : ''}">
@@ -166,7 +194,6 @@ function renderGallery() {
         </button>
     `).join('');
 
-    // 2. Thlalak Filtered display
     grid.innerHTML = "";
     const filtered = currentCategory === 'All' ? galleryImages : galleryImages.filter(img => (img.category || 'General') === currentCategory);
 
@@ -186,10 +213,16 @@ function renderGallery() {
 function updateAdminUI(user) {
     const adminElements = document.querySelectorAll('.admin-only');
     adminElements.forEach(el => {
-        el.style.display = user ? 'block' : 'none';
-        if(el.tagName === 'BUTTON') el.style.display = user ? 'inline-block' : 'none';
+        // Table cell anga lanna tur thlapin thliar hran a ni
+        if(el.tagName === 'TH' || el.tagName === 'TD') {
+            el.style.display = user ? 'table-cell' : 'none';
+        } else if(el.tagName === 'BUTTON') {
+            el.style.display = user ? 'inline-block' : 'none';
+        } else {
+            el.style.display = user ? 'block' : 'none';
+        }
     });
-    renderMembers(); // Re-render to show/hide edit/delete icons
+    renderMembers(); 
 }
 
 // --- FIREBASE LISTENERS ---
