@@ -1,8 +1,8 @@
 // 1. Firebase SDK Imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCjdGn_NPL2Lf624WgXZT5-1269Gk5JXXo",
@@ -20,8 +20,9 @@ const storage = getStorage(app);
 
 let members = [];
 let galleryImages = [];
+let hruaituteList = []; // Hruaitute data khawmna tur array thar
 let currentCategory = 'All'; // Gallery filter
-let currentGroupFilter = 'All'; // Member Group filter thar atan
+let currentGroupFilter = 'All'; // Member Group filter
 
 // --- GLOBAL FUNCTIONS (WINDOW OBJECT) ---
 
@@ -41,10 +42,6 @@ window.toggleTheme = function() {
         body.setAttribute('data-theme', 'light');
         icon.classList.replace('fa-sun', 'fa-moon');
     }
-}
-
-window.showHruaitute = function() {
-    alert("2026 HRUAITUTE:\n\nLeader: H.Lalrinkima\nAsst. Leader: T.Upa RK Rosiamkima\nSecretary: C.Lalnunthara\nAsst.Secretary: B.Lalrinngheta\nTreasurer: T.Upa VL.Hmangaiha\nFin.Secretary: Lalzahawma");
 }
 
 // --- ADMIN ACTIONS ---
@@ -71,7 +68,7 @@ window.logout = async function() {
 window.addMember = async function() {
     const name = document.getElementById('nameInput').value.trim();
     const section = document.getElementById('sectionInput').value;
-    const group = document.getElementById('groupInput').value; // Group value lak belhna
+    const group = document.getElementById('groupInput').value;
     
     if(!name) return alert("Hming ziak rawh!");
     try {
@@ -80,7 +77,6 @@ window.addMember = async function() {
     } catch (e) { alert("Admin login a ngai a ni."); }
 }
 
-// --- EDIT MEMBER ---
 window.editMember = async function(id, oldName) {
     const newName = prompt("Hming thar tur ziak rawh:", oldName);
     if (newName && newName.trim() !== "" && newName !== oldName) {
@@ -97,11 +93,8 @@ window.deleteMember = async function(id) {
     }
 }
 
-// --- GROUP FILTER FUNCTION (THAR) ---
 window.setGroupFilter = function(groupName) {
     currentGroupFilter = groupName;
-    
-    // UI chei mawi deuh nana filter button active lai color thlakna
     const buttons = document.querySelectorAll('#groupFilters .btn');
     buttons.forEach(btn => {
         if(btn.getAttribute('onclick').includes(`'${groupName}'`)) {
@@ -112,17 +105,15 @@ window.setGroupFilter = function(groupName) {
             btn.style.color = "";
         }
     });
-    
     renderMembers();
 }
 
-// --- GALLERY CATEGORY FILTER ---
 window.setCategory = function(cat) {
     currentCategory = cat;
     renderGallery();
 }
 
-// --- GALLERY UPLOAD ---
+// --- GALLERY UPLOAD (SUPER FAST WITH PROGRESS TRACKER) ---
 window.uploadImage = async function() {
     const fileInput = document.getElementById('imageInput');
     const customCatInput = document.getElementById('customCategoryInput');
@@ -132,19 +123,126 @@ window.uploadImage = async function() {
     
     if(!file) return alert("Thlalak thlang hmasa rawh!");
 
-    status.innerText = "Uploading to '" + category + "'... Lo nghak lawk rawh.";
     try {
-        const storageRef = ref(storage, `gallery/${category}/${Date.now()}_${file.name}`);
-        await uploadBytes(storageRef, file);
-        const url = await getDownloadURL(storageRef);
+        status.innerText = "Thlalak kan tite (compress) mek e...";
+        // GALLERY OPTIMIZATION: Max 600px leh 60% quality ah hian visual quality a hloi chuang lo, mahse a zang phut thung
+        const compressedBlob = await compressImage(file, 600, 600, 0.6);
         
-        await addDoc(collection(db, "gallery"), { url, category, createdAt: Date.now() });
-        status.innerText = "Upload Hlawhtling!";
-        fileInput.value = "";
-        customCatInput.value = "";
+        status.innerText = "Firebase-ah kan thawn tan mek e...";
+        const storageRef = ref(storage, `gallery/${category}/${Date.now()}_${file.name}`);
+        const uploadTask = uploadBytesResumable(storageRef, compressedBlob);
+
+        uploadTask.on('state_changed', 
+            (snapshot) => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                status.innerText = `Uploading: ${Math.round(progress)}% lo nghak lawk rawh...`;
+            }, 
+            (error) => {
+                alert("Upload failed: " + error.message);
+                status.innerText = "";
+            }, 
+            async () => {
+                const url = await getDownloadURL(uploadTask.snapshot.ref);
+                await addDoc(collection(db, "gallery"), { url, category, createdAt: Date.now() });
+                status.innerText = "Upload Hlawhtling Tlat!";
+                fileInput.value = "";
+                customCatInput.value = "";
+            }
+        );
     } catch (e) {
-        alert("Upload failed: " + e.message);
+        alert("Error: " + e.message);
         status.innerText = "";
+    }
+}
+
+// --- DYNAMIC HRUAITU UPLOAD / UPDATE FUNCTION (SUPER FAST WITH PROGRESS TRACKER) ---
+window.saveHruaitu = async function() {
+    const name = document.getElementById('hruaituName').value.trim();
+    const role = document.getElementById('hruaituRole').value;
+    const fileInput = document.getElementById('hruaituImage');
+    const status = document.getElementById('hruaituStatus');
+    const file = fileInput.files[0];
+
+    if(!name) return alert("Hruaitu hming chhu lut rawh!");
+
+    try {
+        let imageUrl = "";
+        if(file) {
+            status.innerText = "Thlalak kan tite mek...";
+            // HRUAITUTE PROFILE: Avatar circular anih dawn avangin 350px width hi a chi tawk viau
+            const compressedBlob = await compressImage(file, 350, 350, 0.6);
+
+            status.innerText = "Firebase-ah kan dah mek...";
+            const storageRef = ref(storage, `hruaitute/${role}_${Date.now()}.jpg`);
+            const uploadTask = uploadBytesResumable(storageRef, compressedBlob);
+
+            await new Promise((resolve, reject) => {
+                uploadTask.on('state_changed',
+                    (snapshot) => {
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        status.innerText = `Uploading: ${Math.round(progress)}%...`;
+                    },
+                    (err) => reject(err),
+                    async () => {
+                        imageUrl = await getDownloadURL(uploadTask.snapshot.ref);
+                        resolve();
+                    }
+                );
+            });
+        } else {
+            const existing = hruaituteList.find(h => h.role === role);
+            imageUrl = existing ? existing.imageUrl : "https://via.placeholder.com/150";
+        }
+
+        // Role zawn apiang dawt zela a in-overwrite tawh nan setDoc hman a ni
+        await setDoc(doc(db, "hruaitute", role), {
+            name: name,
+            role: role,
+            imageUrl: imageUrl,
+            updatedAt: Date.now()
+        });
+
+        status.innerText = role + " data thlak hlawhtling a ni ta!";
+        document.getElementById('hruaituName').value = "";
+        fileInput.value = "";
+    } catch (e) {
+        alert("Error: " + e.message);
+        status.innerText = "";
+    }
+}
+
+// --- BRANCH COMMITTEE ACTIONS (MODIFIED TO USE MEMBERS COLLECTION) ---
+window.addCommittee = async function() {
+    const name = document.getElementById('comNameInput').value.trim();
+    const group = document.getElementById('comGroupInput').value;
+    
+    if(!name) return alert("Committee member hming ziak rawh!");
+    try {
+        // Heta 'members' collection chhungah hian isCommittee: true thlin a va save tawh dawn a ni
+        await addDoc(collection(db, "members"), { 
+            name, 
+            group, 
+            section: "Branch Committee", 
+            isCommittee: true, 
+            createdAt: Date.now() 
+        });
+        document.getElementById('comNameInput').value = "";
+    } catch (e) { alert("Admin login a ngai a ni."); }
+}
+
+window.editCommittee = async function(id, oldName) {
+    const newName = prompt("Hming thar tur ziak rawh:", oldName);
+    if (newName && newName.trim() !== "" && newName !== oldName) {
+        try {
+            await updateDoc(doc(db, "members", id), { name: newName.trim() });
+        } catch (e) { alert("Update failed."); }
+    }
+}
+
+window.deleteCommittee = async function(id) {
+    if(confirm("I delete duh tak tak em?")) {
+        try { await deleteDoc(doc(db, "members", id)); } 
+        catch (e) { alert("Permission denied."); }
     }
 }
 
@@ -155,10 +253,12 @@ function renderMembers() {
     if (!listTable) return;
     listTable.innerHTML = "";
     
-    // Group filter a zira data thliar hran dawt dawtna
+    // Committee ho lo lang lo turin kan thiar chhuak hmasa phawt ang
+    const normalMembers = members.filter(m => m.isCommittee !== true);
+    
     const filteredMembers = currentGroupFilter === 'All' 
-        ? members 
-        : members.filter(m => m.group === currentGroupFilter);
+        ? normalMembers 
+        : normalMembers.filter(m => m.group === currentGroupFilter);
 
     filteredMembers.forEach((m, index) => {
         listTable.innerHTML += `
@@ -199,7 +299,7 @@ function renderGallery() {
 
     filtered.forEach(img => {
         grid.innerHTML += `
-            <div class="gallery-card" style="margin-bottom: 20px; text-align: center; border: 1px solid #eee; padding: 10px; border-radius: 10px;">
+            <div class="gallery-card" style="margin-bottom: 20px; text-align: center; border: 1px solid var(--border-color); padding: 10px; border-radius: 10px; background: var(--card-bg);">
                 <p style="font-size: 10px; color: gray; margin: 0 0 5px 0;">Folder: ${img.category || 'General'}</p>
                 <img src="${img.url}" alt="KTP Pic" style="width: 100%; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
                 <br>
@@ -210,10 +310,57 @@ function renderGallery() {
     });
 }
 
+// --- RENDERING HRUAITUTE DYNAMIC CARDS (THAR) ---
+function renderHruaitute() {
+    const grid = document.getElementById('hruaituteGrid');
+    if(!grid) return;
+    grid.innerHTML = "";
+
+    const roleOrder = ["Leader", "Asst. Leader", "Secretary", "Asst. Secretary", "Treasurer", "Fin. Secretary"];
+    
+    roleOrder.forEach(role => {
+        const hruaitu = hruaituteList.find(h => h.role === role);
+        if(hruaitu) {
+            grid.innerHTML += `
+                <div class="hruaitu-card" style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                    <img src="${hruaitu.imageUrl}" alt="${hruaitu.name}" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 15px; border: 3px solid #1e73be;">
+                    <h3 style="margin: 5px 0; font-size: 18px; color: var(--text-color);">${hruaitu.name}</h3>
+                    <p style="color: #1e73be; font-weight: bold; font-size: 14px; margin: 5px 0;">${hruaitu.role}</p>
+                </div>`;
+        }
+    });
+}
+
+// --- RENDERING COMMITTEE MEMBERS LIST (MODIFIED TO FILTER FROM MEMBERS) ---
+function renderCommittee() {
+    const listTable = document.getElementById('committeeListTable');
+    if (!listTable) return;
+    listTable.innerHTML = "";
+
+    // Members array atang khan isCommittee == true ho chiah kan thlang chhuak ang
+    const committeeList = members.filter(m => m.isCommittee === true);
+
+    committeeList.forEach((c, index) => {
+        listTable.innerHTML += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${c.name}</td>
+                <td>${c.group || 'Group Neilo'}</td>
+                <td>
+                    <button class="admin-only" onclick="editCommittee('${c.id}', '${c.name}')" style="color:orange; background:none; border:none; cursor:pointer; display:${auth.currentUser ? 'inline-block' : 'none'}; margin-right: 10px;">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="admin-only" onclick="deleteCommittee('${c.id}')" style="color:red; background:none; border:none; cursor:pointer; display:${auth.currentUser ? 'inline-block' : 'none'};">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>`;
+    });
+}
+
 function updateAdminUI(user) {
     const adminElements = document.querySelectorAll('.admin-only');
     adminElements.forEach(el => {
-        // Table cell anga lanna tur thlapin thliar hran a ni
         if(el.tagName === 'TH' || el.tagName === 'TD') {
             el.style.display = user ? 'table-cell' : 'none';
         } else if(el.tagName === 'BUTTON') {
@@ -223,18 +370,64 @@ function updateAdminUI(user) {
         }
     });
     renderMembers(); 
+    renderCommittee(); 
+}
+
+// --- NEW FLEXIBLE IMAGE COMPRESSION FUNCTION ---
+function compressImage(file, maxWidth, maxHeight, quality) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height *= maxWidth / width;
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width *= maxHeight / height;
+                        height = maxHeight;
+                    }
+                }
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                canvas.toBlob((blob) => {
+                    resolve(blob);
+                }, 'image/jpeg', quality); 
+            };
+        };
+        reader.onerror = (error) => reject(error);
+    });
 }
 
 // --- FIREBASE LISTENERS ---
 
+// Hemi snapshot pakhat hian normal members leh committee members a rawn update dun vek tawh dawn a ni
 onSnapshot(collection(db, "members"), (snapshot) => {
     members = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     renderMembers();
+    renderCommittee();
 });
 
 onSnapshot(collection(db, "gallery"), (snapshot) => {
     galleryImages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     renderGallery();
+});
+
+onSnapshot(collection(db, "hruaitute"), (snapshot) => {
+    hruaituteList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderHruaitute();
 });
 
 onAuthStateChanged(auth, updateAdminUI);
