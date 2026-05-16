@@ -17,6 +17,7 @@
     <nav>
         <ul id="navLinks">
             <li><a style="cursor:pointer" onclick="showSection('home')">Home</a></li>
+            <li><a style="cursor:pointer" onclick="showSection('hruaitute-page')">Hruaitute</a></li>
             <li><a style="cursor:pointer" onclick="showSection('member-page')">Member List</a></li>
             <li><a style="cursor:pointer" onclick="showSection('gallery-page')">Gallery</a></li>
             <li><a style="cursor:pointer; color: #ffc107;" onclick="showSection('login-section')">Admin Login</a></li>
@@ -43,7 +44,7 @@
             <h1 class="chibai">Chibai le</h1>
             <p>Kristian Ṭhalai Pawl,<br>Chhingchhip Mualpui Branch </p>
             <button class="btn" onclick="showSection('member-page')">Member List 2026 →</button>
-            <button class="btn" style="background: #6f42c1;" onclick="showHruaitute()">2026 Hruaitute →</button>
+            <button class="btn" style="background: #6f42c1;" onclick="showSection('hruaitute-page')">2026 Hruaitute →</button>
             <div class="scroll-down"><i class="fas fa-chevron-down"></i> Scroll Down</div>
         </div>
         <div class="right-content">
@@ -64,6 +65,73 @@
     </section>
 </div>
 
+<!-- ================= HRUAITUTE SECTION THAR ================= -->
+<section id="hruaitute-page" class="container section hidden">
+    <h2>2026 Branch Hruaitute</h2>
+    
+    <!-- Admin Manage Form (Hruaitute upload leh change zung zungna) -->
+    <div class="admin-only" style="display:none; background: var(--card-bg); padding: 20px; border-radius: 10px; margin-bottom: 30px; border: 1px solid var(--border-color);">
+        <h4><i class="fas fa-user-cog"></i> Hruaitu Thar Add / Update</h4><br>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <input type="text" id="hruaituName" placeholder="Hruaitu Hming (e.g. H.Lalrinkima)..." style="padding: 12px; border-radius: 5px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); width:100%;">
+            <select id="hruaituRole" style="padding: 12px; border-radius: 5px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); width:100%;">
+                <option value="Leader">Leader</option>
+                <option value="Asst. Leader">Asst. Leader</option>
+                <option value="Secretary">Secretary</option>
+                <option value="Asst. Secretary">Asst. Secretary</option>
+                <option value="Treasurer">Treasurer</option>
+                <option value="Fin. Secretary">Fin. Secretary</option>
+            </select>
+            <div style="margin: 5px 0;">
+                <label style="font-size: 13px; display:block; margin-bottom:5px;">Hruaitu Thlalak:</label>
+                <input type="file" id="hruaituImage" accept="image/*">
+            </div>
+            <button class="add-btn" onclick="saveHruaitu()">Save / Update Hruaitu</button>
+            <p id="hruaituStatus" style="font-size: 12px; color: #28a745; margin:0;"></p>
+        </div>
+    </div>
+
+    <!-- Hruaitute lo lanna grid -->
+    <div id="hruaituteGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-top: 20px;">
+        <!-- JS hmangin a rawn in-load dâwn nia -->
+    </div>
+
+    <br><hr style="border: 0; border-top: 1px solid var(--border-color); margin: 40px 0;"><br>
+
+    <!-- ================= BRANCH COMMITTEE SECTION ================= -->
+    <h2>Branch Committee Members 2026</h2>
+
+    <!-- Admin Committee Add Input Form (Heta Form Layout hi hlawhtling turin kan thlak thar e) -->
+    <div class="admin-only" style="display:none; background: var(--card-bg); padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--border-color);">
+        <h4><i class="fas fa-user-plus"></i> Committee Member Thar Belhna</h4><br>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <input type="text" id="comNameInput" placeholder="Committee member hming ziak rawh..." style="padding: 12px; border-radius: 5px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); width:100%;">
+            <select id="comGroupInput" style="padding: 12px; border-radius: 5px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); width:100%;">
+                <option value="Khawngaihna Group">Khawngaihna Group</option>
+                <option value="Hmangaihna Group">Hmangaihna Group</option>
+                <option value="Remna Group">Remna Group</option>
+                <option value="Group Neilo">Group Neilo</option>
+            </select>
+            <button class="add-btn" onclick="addCommittee()">Add Committee</button>
+        </div>
+    </div>
+
+    <!-- Committee Member Table List -->
+    <table>
+        <thead>
+            <tr>
+                <th>No.</th>
+                <th>Hming</th>
+                <th>Group</th>
+                <th class="admin-only" style="display:none;">Action</th>
+            </tr>
+        </thead>
+        <tbody id="committeeListTable">
+            <!-- JS hmangin data a lo lut ang -->
+        </tbody>
+    </table>
+</section>
+
 <section id="member-page" class="container section hidden">
     <h2>Member List 2026</h2>
     <div class="progress-box">
@@ -71,7 +139,6 @@
         <div class="progress-text">Progression: <span id="memberCount">0</span> Members</div>
     </div>
 
-    <!-- Admin Member Add-na Form (Group Thlanna Telin) -->
     <div class="input-group admin-only" style="display:none; margin-bottom: 20px;">
         <input type="text" id="nameInput" placeholder="Member hming ziak lut rawh...">
         <select id="sectionInput">
@@ -79,8 +146,11 @@
             <option value="Hmarveng">Hmarveng</option>
             <option value="Biak in Veng">Biak In Veng</option>
             <option value="Bangla">Bangla Veng</option> 
+            <option value="Bangla">Mainroad Veng</option> 
+            <option value="Bangla">PWD Road</option>
+            <option value="Bangla">Salem Veng</option>  
+            <option value="Bangla">Leitan</option> 
         </select>
-        <!-- Group thlanna dah belh a ni -->
         <select id="groupInput">
             <option value="Khawngaihna Group">Khawngaihna Group</option>
             <option value="Hmangaihna Group">Hmangaihna Group</option>
@@ -89,7 +159,6 @@
         <button class="add-btn" onclick="addMember()">Add Member</button>
     </div>
 
-    <!-- Group Filter Buttons (Group hrang hrang thliar hranna) -->
     <div id="groupFilters" style="margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 10px;">
         <button class="btn" onclick="setGroupFilter('All')" style="font-size: 13px; padding: 6px 14px;">All Groups</button>
         <button class="btn" onclick="setGroupFilter('Khawngaihna Group')" style="font-size: 13px; padding: 6px 14px;">Khawngaihna</button>
@@ -104,7 +173,7 @@
                 <th>Hming</th>
                 <th>Section</th>
                 <th>Group</th>
-                <th>Action</th>
+                <th class="admin-only" style="display:none;">Action</th>
             </tr>
         </thead>
         <tbody id="memberListTable"></tbody>
