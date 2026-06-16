@@ -21,8 +21,7 @@
 
     <script type="module">
         import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.x.x/firebase-auth.js";
-        // I script.js-a Firebase config kha hetah hian rawn copy-paste leh rawh
-        // ... (firebaseConfig setup kha) ...
+        
         
         window.handleLogin = async () => {
             const email = document.getElementById('adminEmail').value;
@@ -31,7 +30,7 @@
             try {
                 await signInWithEmailAndPassword(auth, email, pass);
                 alert("Login Successful!");
-                window.location.href = "index.html"; // Login hlawhtlin chuan home-ah a let ang
+                window.location.href = "index.html"; 
             } catch (err) {
                 alert("Login failed: " + err.message);
             }
